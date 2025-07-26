@@ -1,0 +1,15 @@
+{
+	"$schema": "./schema/config.schema.json",
+	"changeCommentTemplate": "Update ${hostname} to ${ip} by ${username}",
+	"clientSecret": "u53Qpt4xyrM5USNP5Q4eHSkxyZpvSYDAMLSfSZXtaVGx",
+	"clientUsername": null,
+	"domainName": "example.org",
+	"hostnameOverride": "home",
+	"hostnameParam": null,
+	"ipMustMatchRemoteAddr": true,
+	"region": "us-west-1",
+	"secretParam": "key",
+	"ttlSeconds": 900,
+	"useRemoteAddrWhenNoIP": false,
+	"usernameParam": "user"
+}

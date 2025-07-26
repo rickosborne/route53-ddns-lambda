@@ -1,0 +1,35 @@
+{
+	"author": {
+		"name": "Rick Osborne",
+		"url": "https://rickosborne.org"
+	},
+	"dependencies": {
+		"@aws-sdk/client-route-53": "3.848.0"
+	},
+	"description": "Barebones dynamic DNS via AWS Route53 and Lambda",
+	"devDependencies": {
+		"@types/adm-zip": "0.5.7",
+		"@types/aws-lambda": "8.10.152",
+		"@types/node": "24.1.0",
+		"@aws-sdk/client-cloudwatch-logs": "3.848.0",
+		"@aws-sdk/client-iam": "3.848.0",
+		"@aws-sdk/client-lambda": "3.848.0",
+		"@aws-sdk/client-sts": "3.848.0",
+		"adm-zip": "0.5.16",
+		"esbuild": "0.25.8",
+		"rimraf": "6.0.1",
+		"source-map-support": "0.5.21",
+		"tsx": "4.20.3",
+		"typescript": "5.8.3",
+		"zod": "4.0.5"
+	},
+	"license": "CC-BY-NC-SA-4.0",
+	"name": "route53-ddns-lambda",
+	"private": true,
+	"scripts": {
+		"deploy": "tsx scripts/deploy.ts",
+		"type-check": "tsc --noEmit"
+	},
+	"type": "module",
+	"version": "2025.7.26"
+}

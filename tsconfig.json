@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"isolatedModules": true,
+		"lib": [
+			"ESNext"
+		],
+		"module": "NodeNext",
+		"moduleResolution": "nodenext",
+		"noImplicitAny": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"outDir": "dist",
+		"target": "ESNext",
+		"strict": true
+	}
+}

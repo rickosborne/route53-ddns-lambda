@@ -1,0 +1,199 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"allOf": [
+		{
+			"properties": {
+				"$schema": {
+					"description": "Relative path to the schema definition, used to help editors with code completion and syntax checking.",
+					"type": "string"
+				},
+				"allowedHostnames": {
+					"description": "Hostnames considered valid when supplied by the client",
+					"items": {
+						"pattern": "^[a-z][-a-z0-9]*$",
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"allowedIPMasks": {
+					"description": "CIDR-formatted masks of allowed/expected IPv4 address values.  If not present, any IP address is considered valid.",
+					"examples": [
+						"12.34.0.0/16"
+					],
+					"items": {
+						"pattern": "^(1?[0-9]{1,2}|2[0-5][0-9])[.](1?[0-9]{1,2}|2[0-5][0-9])[.](1?[0-9]{1,2}|2[0-5][0-9])[.](1?[0-9]{1,2}|2[0-5][0-9])(/([12]?[0-9]|3[012]))?$",
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"changeCommentTemplate": {
+					"default": null,
+					"description": "Template for the DNS change comment, or null if no comment should be used.  Params: hostname, ip, username",
+					"examples": [
+						"Update ${hostname} to ${ip} by ${username}"
+					],
+					"oneOf": [
+						{
+							"type": "null"
+						},
+						{
+							"type": "string"
+						}
+					],
+					"type": "string"
+				},
+				"clientSecret": {
+					"$comment": "You could generate this via: openssl rand -base64 30",
+					"description": "The password/secret/key sent by the client to authenticate the update.",
+					"examples": [
+						"23Ve2XefGNfN855gU4vkRyhK8k5dIbk6vExjJk5x"
+					],
+					"pattern": "^[-+/_a-zA-Z0-9]{30,}$",
+					"type": "string"
+				},
+				"clientUsername": {
+					"default": null,
+					"description": "The username sent by the client, or null if the client should not send one.",
+					"oneOf": [
+						{
+							"type": "null"
+						},
+						{
+							"pattern": "^[@.a-zA-Z0-9]+$",
+							"type": "string"
+						}
+					]
+				},
+				"hostnameOverride": {
+					"description": "Hostname which should be used in the Route53 DNS record, regardless of any value sent by the client.",
+					"pattern": "^[a-z][-a-z0-9]*$",
+					"type": "string"
+				},
+				"hostnameParam": {
+					"default": "hostname",
+					"description": "The name of the hostname query string parameter sent by the client, or null if the client should not send one.",
+					"oneOf": [
+						{
+							"type": "null"
+						},
+						{
+							"pattern": "^[a-zA-Z0-9]+$",
+							"type": "string"
+						}
+					]
+				},
+				"iamRoleName": {
+					"default": "route53-dynamic-dns-lambda",
+					"description": "Name of the IAM Role under which the Lambda will run.",
+					"pattern": "^[-_a-zA-Z0-9]+$",
+					"type": "string"
+				},
+				"ipMustMatchRemoteAddr": {
+					"default": true,
+					"description": "If true, the client-provided IP address must match the one detected by AWS for the request.",
+					"type": "boolean"
+				},
+				"ipParam": {
+					"default": "ip",
+					"description": "The name of the IP address query string parameter sent by the client.",
+					"pattern": "^[a-zA-Z0-9]+$",
+					"type": "string"
+				},
+				"lambdaName": {
+					"default": "route53DynamicDNS",
+					"description": "Override the name of the update handler Lambda.",
+					"pattern": "^[-_a-zA-Z0-9]{1,140}$",
+					"type": "string"
+				},
+				"region": {
+					"default": "us-east-1",
+					"description": "AWS region in which the Lambda should be deployed.",
+					"pattern": "^[a-z]+-[a-z]+-[1-9]$",
+					"type": "string"
+				},
+				"removeIfNoIP": {
+					"default": false,
+					"description": "Remove the DNS record if an explicit IP value is not provided by the client.",
+					"type": "boolean"
+				},
+				"removeIfRemoteAddrIPMismatch": {
+					"default": false,
+					"description": "Remove the DNS record the explicit IP value provided by the client does not match the one detected by AWS for the request.",
+					"type": "boolean"
+				},
+				"secretParam": {
+					"default": "secret",
+					"description": "The name of the secret/password/key query string parameter sent by the client.",
+					"examples": [
+						"key",
+						"password",
+						"secret"
+					],
+					"pattern": "^[a-zA-Z0-9]+$",
+					"type": "string"
+				},
+				"ttlSeconds": {
+					"$comment": "The number of seconds a client can cache the IP address returned by a DNS lookup.  Shorter values mean clients see changes faster, but may also mean increased load on both client and server with more lookups.",
+					"default": 900,
+					"description": "DNS Record Time-to-Live in seconds.",
+					"minimum": 1,
+					"type": "number"
+				},
+				"useRemoteAddrWhenNoIP": {
+					"default": false,
+					"description": "If true, and the client does not send an IP address, use the remote address detected by AWS for the request.",
+					"type": "boolean"
+				},
+				"usernameParam": {
+					"default": "username",
+					"description": "The name of the username query string parameter sent by the client.",
+					"oneOf": [
+						{
+							"type": "null"
+						},
+						{
+							"pattern": "^[a-zA-Z0-9]+$",
+							"type": "string"
+						}
+					]
+				}
+			},
+			"required": [
+				"clientSecret"
+			],
+			"title": "Route53DDNSLambda Config",
+			"type": "object"
+		},
+		{
+			"oneOf": [
+				{
+					"properties": {
+						"domainName": {
+							"description": "Domain name, hosted in Route53, which you want to manage.",
+							"examples": [
+								"example.com"
+							],
+							"pattern": "^([a-z][-a-z0-9]*)([.]([a-z][-a-z0-9]*))+$",
+							"type": "string"
+						}
+					},
+					"required": [
+						"domainName"
+					]
+				},
+				{
+					"properties": {
+						"route53ZoneId": {
+							"description": "Route53 Hosted Zone ID for the domain which you want to manage.",
+							"pattern": "^[A-Z0-9]+$",
+							"type": "string"
+						}
+					},
+					"required": [
+						"route53ZoneId"
+					]
+				}
+			]
+		}
+	]
+}
