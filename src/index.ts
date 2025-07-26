@@ -2,14 +2,14 @@ import { Route53 } from "@aws-sdk/client-route-53";
 import type { ResourceRecord, ResourceRecordSet } from "@aws-sdk/client-route-53/dist-types/models/models_0.js";
 import type { APIGatewayEventRequestContextV2, APIGatewayProxyEventV2, APIGatewayProxyResult } from "aws-lambda";
 import * as console from "node:console";
-import { BlockList } from "node:net";
 import * as process from "node:process";
+import { ipSafelist } from "./ip-safelist.js";
 
 const HOSTNAME_PATTERN = /^[a-z][-a-z0-9]*$/;
 const IP_PATTERN = /^(1?[0-9]{1,2}|2[0-5][0-9])\.(1?[0-9]{1,2}|2[0-5][0-9])\.(1?[0-9]{1,2}|2[0-5][0-9])\.(1?[0-9]{1,2}|2[0-5][0-9])$/;
 
 const getEnv = (name: string): string | null => {
-	const value = process.env[name]?.trim();
+	const value = process.env[ name ]?.trim();
 	return value == null || value === "" ? null : value;
 };
 
@@ -27,12 +27,7 @@ const config = {
 	allowedHostnames: (getEnv("ALLOWED_HOSTNAMES") ?? "")
 		.split(/\s*;\s*/g),
 	allowedIpMasks: (getEnv("ALLOWED_IP_MASKS") ?? "0.0.0.0/0")
-		.split(/\s*;\s*/g)
-		.reduce((list, cidr) => {
-			const [ ip, mask ] = cidr.split("/");
-			list.addSubnet(ip, Number.parseInt(mask, 10));
-			return list;
-		}, new BlockList()),
+		.split(/\s*;\s*/g),
 	changeCommentTemplate: getEnv("CHANGE_COMMENT_TEMPLATE"),
 	clientSecret: getEnv("CLIENT_SECRET"),
 	clientUsername: getEnv("CLIENT_USERNAME"),
@@ -73,6 +68,8 @@ const fail = (body: string, statusCode: number, message = body): APIGatewayProxy
 	};
 };
 
+const isAllowedIp: (ip: string) => boolean = config.allowedIpMasks.length === 0 ? (() => true) : ipSafelist(config.allowedIpMasks);
+
 let client: Route53 | undefined = undefined;
 
 // noinspection JSUnusedGlobalSymbols
@@ -94,10 +91,10 @@ export const handleUpdate = async (event: APIGatewayProxyEventV2): Promise<APIGa
 		if (remoteAddr == null) {
 			console.warn({ message: "Could not determine RemoteAddr" });
 		}
-		const hostname = config.hostnameOverride ?? queryParams[config.hostnameParam] ?? undefined;
-		const username = queryParams[config.usernameParam] ?? undefined;
-		const password = queryParams[config.secretParam] ?? undefined;
-		const ip = queryParams[config.ipParam] ?? (config.useRemoteAddrWhenNoIp ? remoteAddr : undefined) ?? undefined;
+		const hostname = config.hostnameOverride ?? queryParams[ config.hostnameParam ] ?? undefined;
+		const username = queryParams[ config.usernameParam ] ?? undefined;
+		const password = queryParams[ config.secretParam ] ?? undefined;
+		const ip = queryParams[ config.ipParam ] ?? (config.useRemoteAddrWhenNoIp ? remoteAddr : undefined) ?? undefined;
 		console.log({ hostname, ip, message: "Request", username, remoteAddr });
 		if (password !== config.clientSecret) {
 			return fail("Unauthorized", 403);
@@ -105,7 +102,7 @@ export const handleUpdate = async (event: APIGatewayProxyEventV2): Promise<APIGa
 		if (ip == null || !IP_PATTERN.test(ip)) {
 			return fail("Bad request: IP", 400);
 		}
-		if (config.allowedIpMasks != null && !config.allowedIpMasks.check(ip)) {
+		if (!isAllowedIp(ip)) {
 			return fail("IP Out of Range", 400, ip);
 		}
 		if (hostname == null || !HOSTNAME_PATTERN.test(hostname) || (config.allowedHostnames.length > 0 && !config.allowedHostnames.includes(hostname))) {
@@ -162,8 +159,8 @@ export const handleUpdate = async (event: APIGatewayProxyEventV2): Promise<APIGa
 		if (config.changeCommentTemplate != null) {
 			comment = config.changeCommentTemplate
 				.replace(/\$\{ip}/g, ip)
-				.replace(/\$\{hostname}/, hostname)
-				.replace(/\$\{username}/, username ?? "(no username)")
+				.replace(/\$\{hostname}/g, hostname)
+				.replace(/\$\{username}/g, username ?? "(no username)")
 		}
 		const changeResult = await client.changeResourceRecordSets({
 			ChangeBatch: {

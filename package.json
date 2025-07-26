@@ -28,8 +28,9 @@
 	"private": true,
 	"scripts": {
 		"deploy": "tsx scripts/deploy.ts",
+		"test": "tsx --test",
 		"type-check": "tsc --noEmit"
 	},
 	"type": "module",
-	"version": "2025.7.26"
+	"version": "2025.7.27"
 }
